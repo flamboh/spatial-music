@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-export const get = query({
+
+export const getAllPins = query({
   args: {},
   handler: async (ctx) => {
     return await ctx.db.query("pins").collect();
@@ -13,12 +14,14 @@ export const createPin = mutation({
     latitude: v.number(),
     longitude: v.number(),
     comment: v.string(),
+    songId: v.id("songs"),
   },
   handler: async (ctx, args) => {
     const newPinId = await ctx.db.insert("pins", {
       latitude: args.latitude,
       longitude: args.longitude,
       comment: args.comment,
+      songId: args.songId,
     });
     return newPinId;
   },
