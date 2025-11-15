@@ -8,7 +8,7 @@
  * @module
  */
 
-import type * as pins from "../pins.js";
+import type * as tasks from "../tasks.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +17,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  pins: typeof pins;
+  tasks: typeof tasks;
 }>;
 
 /**

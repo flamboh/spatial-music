@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "concert-chat",
-    "slug": "concert-chat",
+    "name": "spatial-music",
+    "slug": "spatial-music",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "concertchat",
+    "scheme": "spatialmusic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
