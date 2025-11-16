@@ -23,18 +23,6 @@ type PinWithSong = {
   } | null;
 };
 
-<<<<<<< Updated upstream
-export default function LocationMap() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
-  );
-type LocationMapProps = {
-  onLocationChange?: (location: { latitude: number; longitude: number }) => void;
-};
-
-export default function LocationMap({ onLocationChange }: LocationMapProps) {
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-=======
 type LocationMapProps = {
   onLocationChange?: (location: {
     latitude: number;
@@ -46,7 +34,6 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
->>>>>>> Stashed changes
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -154,13 +141,9 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
               longitude: pin.longitude,
             }}
             title={pin.song?.title || "Unknown Song"}
-<<<<<<< Updated upstream
-            description={pin.song ? `${pin.song.artist} - ${pin.song.album}` : pin.comment}
-=======
             description={
               pin.song ? `${pin.song.artist} - ${pin.song.album}` : pin.comment
             }
->>>>>>> Stashed changes
           />
         ))}
       </MapView>
