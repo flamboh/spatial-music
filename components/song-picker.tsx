@@ -4,7 +4,11 @@ import { api } from "../convex/_generated/api";
 import { Card } from "./ui/card";
 
 type SongPickerProps = {
-  onSongSelected?: (id: string) => void;
+  onSongSelected?: (song: {
+    id: string;
+    title?: string;
+    artist?: string;
+  }) => void;
 };
 
 export default function SongPicker({ onSongSelected }: SongPickerProps) {
@@ -36,7 +40,13 @@ export default function SongPicker({ onSongSelected }: SongPickerProps) {
           {songs.map((song) => (
             <Pressable
               key={song._id}
-              onPress={() => onSongSelected?.(song._id)}
+              onPress={() =>
+                onSongSelected?.({
+                  id: song._id,
+                  title: song.title,
+                  artist: song.artist,
+                })
+              }
               style={({ pressed }) => [
                 {
                   opacity: pressed ? 0.7 : 1,
@@ -44,7 +54,7 @@ export default function SongPicker({ onSongSelected }: SongPickerProps) {
                   backgroundColor: pressed ? "rgba(0,0,0,0.08)" : "transparent",
                 },
               ]}
-              className="rounded-xl"
+              className="rounded-xl bg-background/95"
             >
               <Card className="m-0 gap-0.5 bg-transparent p-2">
                 <Text className="text-lg font-semibold text-foreground">
