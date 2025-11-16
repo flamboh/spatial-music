@@ -1,3 +1,5 @@
+import LocationMap from "../components/LocationMap";
+import "../global.css";
 import { Pressable, View } from "react-native";
 import SongPicker from "../components/song-picker";
 import {
@@ -6,11 +8,11 @@ import {
   PopoverTrigger,
 } from "../components/ui/popover";
 import { Text } from "../components/ui/text";
-import "../global.css";
 
 export default function Index() {
   return (
     <View className="flex-1 items-center justify-end bg-background px-4 pb-10">
+      <LocationMap />
       <Popover>
         <PopoverTrigger asChild>
           <Pressable className="rounded-full bg-primary px-4 py-2">
