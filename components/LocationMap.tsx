@@ -1,11 +1,13 @@
 import { useQuery } from "convex/react";
+import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import MapView, { Callout, Marker } from "react-native-maps";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import "../global.css";
+import { Text } from "./ui/text";
 
 // Type for pin with associated song data
 type PinWithSong = {
@@ -21,6 +23,7 @@ type PinWithSong = {
     imageStorageId: Id<"_storage">;
     artist: string;
     album: string;
+    imageUrl?: string;
   } | null;
 };
 
@@ -43,18 +46,44 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
   const pins = useQuery(api.pins.getAllPins);
   const songs = useQuery(api.songs.getAllSongs);
 
-  // Match pins with their corresponding songs
+  // Get all unique image storage IDs
+  const imageStorageIds = useMemo(() => {
+    if (!songs) return [];
+    return songs
+      .map((song) => song.imageStorageId)
+      .filter((id): id is Id<"_storage"> => id !== undefined);
+  }, [songs]);
+
+  // Fetch image URLs for all songs
+  const imageUrls = useQuery(
+    api.songs.getImageUrls,
+    imageStorageIds.length > 0 ? { ids: imageStorageIds } : "skip"
+  );
+
+  // Match pins with their corresponding songs and add image URLs
   const pinsWithSongs = useMemo<PinWithSong[]>(() => {
-    if (!pins || !songs) return [];
+    if (!pins || !songs || !imageUrls) return [];
 
     return pins.map((pin) => {
       const song = songs.find((s) => s._id === pin.songId);
+      if (!song) {
+        return {
+          ...pin,
+          song: null,
+        };
+      }
+
+      const imageUrl = imageUrls[song.imageStorageId];
+
       return {
         ...pin,
-        song: song || null,
+        song: {
+          ...song,
+          imageUrl,
+        },
       };
     });
-  }, [pins, songs]);
+  }, [pins, songs, imageUrls]);
 
   useEffect(() => {
     (async () => {
@@ -141,11 +170,33 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
               latitude: pin.latitude,
               longitude: pin.longitude,
             }}
-            title={pin.song?.title || "Unknown Song"}
-            description={
-              pin.song ? `${pin.song.artist} - ${pin.song.album}` : pin.comment
-            }
-          />
+          >
+            <Callout>
+              <View className="w-64 p-3">
+                {pin.song?.imageUrl && (
+                  <Image
+                    source={{ uri: pin.song.imageUrl }}
+                    style={{ width: "100%", height: 200, borderRadius: 8 }}
+                    contentFit="cover"
+                    className="mb-2"
+                  />
+                )}
+                <Text className="text-lg font-semibold text-foreground">
+                  {pin.song?.title || "Unknown Song"}
+                </Text>
+                {pin.song && (
+                  <Text className="text-sm text-muted-foreground">
+                    {pin.song.artist} - {pin.song.album}
+                  </Text>
+                )}
+                {!pin.song && (
+                  <Text className="text-sm text-muted-foreground">
+                    {pin.comment}
+                  </Text>
+                )}
+              </View>
+            </Callout>
+          </Marker>
         ))}
       </MapView>
     </View>
