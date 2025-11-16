@@ -1,6 +1,8 @@
 import { Id } from "@/convex/_generated/dataModel";
-import { useMutation } from "convex/react";
-import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
+import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
+import { Pause, Play } from "lucide-react-native";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import LocationMap from "../components/LocationMap";
 import SongPicker from "../components/song-picker";
@@ -20,6 +22,8 @@ export default function Index() {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const pins = useQuery(api.pins.getAllPins);
   const createPin = useMutation(api.pins.createPin);
 
   const handleSongSelected = (song: {
@@ -46,6 +50,40 @@ export default function Index() {
       console.error("Failed to create pin", error);
     }
   };
+
+  const nearestPin = useMemo(() => {
+    if (!pins || !location) return null;
+    return pins.reduce<null | (typeof pins)[number]>((closest, pin) => {
+      if (!closest) return pin;
+      const d1 =
+        Math.pow(pin.latitude - location.latitude, 2) +
+        Math.pow(pin.longitude - location.longitude, 2);
+      const d2 =
+        Math.pow(closest.latitude - location.latitude, 2) +
+        Math.pow(closest.longitude - location.longitude, 2);
+      return d1 < d2 ? pin : closest;
+    }, null);
+  }, [pins, location]);
+
+  const nearestSong = useQuery(
+    api.songs.getSong,
+    nearestPin ? { id: nearestPin.songId as Id<"songs"> } : "skip"
+  );
+  const audioUrl = useQuery(
+    api.songs.getAudioUrl,
+    nearestSong?.audioStorageId
+      ? { id: nearestSong.audioStorageId as Id<"_storage"> }
+      : "skip"
+  );
+  const player = useAudioPlayer(audioUrl ?? undefined);
+
+  useEffect(() => {
+    if (audioUrl) {
+      player.play();
+      setIsPaused(false);
+    }
+  }, [audioUrl, player]);
+
   return (
     <View className="flex-1 bg-background">
       <LocationMap onLocationChange={setLocation} />
@@ -98,36 +136,57 @@ export default function Index() {
       {/* Bottom controls */}
       <View
         pointerEvents="box-none"
-        className="absolute inset-x-0 bottom-12 items-center"
+        className="absolute inset-x-0 bottom-12 items-center px-4 w-full"
       >
-        {location && (
-          <View className="p-2">
-            <Text className="text-muted-foreground">
-              Location: {location.latitude}, {location.longitude}
-            </Text>
-          </View>
-        )}
         {showPicker && (
           <View className="my-2 w-min max-h-[24rem] rounded-2xl border border-border bg-background/95 shadow-lg">
             <SongPicker onSongSelected={handleSongSelected} />
           </View>
         )}
-        <Pressable
-          className="rounded-full border-2 bg-background/95 px-4 py-2"
-          onPress={() => {
-            setShowPicker((prev) => {
-              const next = !prev;
-              if (!next) {
-                setSelectedSong(null);
+        <View className="relative w-full items-center justify-center">
+          <Pressable
+            className="absolute left-0 rounded-full bg-black px-3 py-2"
+            onPress={async () => {
+              if (!audioUrl) return;
+              try {
+                if (isPaused) {
+                  await setIsAudioActiveAsync(true);
+                  player.play();
+                  setIsPaused(false);
+                } else {
+                  player.pause();
+                  await setIsAudioActiveAsync(false);
+                  setIsPaused(true);
+                }
+              } catch (error) {
+                console.warn("Audio toggle failed", error);
               }
-              return next;
-            });
-          }}
-        >
-          <Text className="text-center text-base font-semibold text-primary">
-            Song Picker
-          </Text>
-        </Pressable>
+            }}
+            disabled={!audioUrl}
+          >
+            {isPaused ? (
+              <Play color="#fff" size={18} />
+            ) : (
+              <Pause color="#fff" size={18} />
+            )}
+          </Pressable>
+          <Pressable
+            className="rounded-full border-2 bg-background/95 px-4 py-2"
+            onPress={() => {
+              setShowPicker((prev) => {
+                const next = !prev;
+                if (!next) {
+                  setSelectedSong(null);
+                }
+                return next;
+              });
+            }}
+          >
+            <Text className="text-center text-base font-semibold text-primary">
+              Song Picker
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
