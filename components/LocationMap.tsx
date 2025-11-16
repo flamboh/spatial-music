@@ -3,9 +3,9 @@ import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Image as RNImage,
   Animated,
   Easing,
+  Image as RNImage,
   StyleSheet,
   View,
 } from "react-native";
@@ -87,7 +87,7 @@ export default function LocationMap({
     });
   }, [pins, songs, imageUrls]);
 
-  const pulseAnim = useMemo(() => new Animated.Value(1), [activePinId]);
+  const pulseAnim = useMemo(() => new Animated.Value(1), []);
 
   const activeBpm = useMemo(() => {
     const activePin = pinsWithSongs.find((p) => p._id === activePinId);
