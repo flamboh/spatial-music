@@ -112,6 +112,7 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
             });
           }
         );
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         setError("Failed to get location");
         setLoading(false);
