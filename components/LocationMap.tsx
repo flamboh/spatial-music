@@ -46,25 +46,13 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
   const pins = useQuery(api.pins.getAllPins);
   const songs = useQuery(api.songs.getAllSongs);
 
-  // Get all unique image storage IDs
-  const imageStorageIds = useMemo(() => {
-    if (!songs) return [];
-    return songs
-      .map((song) => song.imageStorageId)
-      .filter((id): id is Id<"_storage"> => id !== undefined);
-  }, [songs]);
-
-  // Fetch image URLs for all songs
-  const imageUrls = useQuery(
-    api.songs.getImageUrls,
-    imageStorageIds.length > 0 ? { ids: imageStorageIds } : "skip"
-  );
+  const imageUrls = useQuery(api.songs.getAllImageUrls);
 
   // Match pins with their corresponding songs and add image URLs
-  const pinsWithSongs = useMemo<PinWithSong[]>(() => {
+  const pinsWithSongs = useMemo(() => {
     if (!pins || !songs || !imageUrls) return [];
 
-    return pins.map((pin) => {
+    return pins.map((pin): PinWithSong => {
       const song = songs.find((s) => s._id === pin.songId);
       if (!song) {
         return {
@@ -73,13 +61,13 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
         };
       }
 
-      const imageUrl = imageUrls[song.imageStorageId];
+      const imageUrl = imageUrls[song._id];
 
       return {
         ...pin,
         song: {
           ...song,
-          imageUrl,
+          imageUrl: imageUrl ?? undefined,
         },
       };
     });
