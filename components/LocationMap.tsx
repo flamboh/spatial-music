@@ -1,11 +1,17 @@
 import { useQuery } from "convex/react";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image as RNImage,
+  StyleSheet,
+  View,
+} from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import "../global.css";
+import { Text } from "./ui/text";
 
 // Type for pin with associated song data
 type PinWithSong = {
@@ -21,6 +27,7 @@ type PinWithSong = {
     imageStorageId: Id<"_storage">;
     artist: string;
     album: string;
+    imageUrl?: string;
   } | null;
 };
 
@@ -43,18 +50,32 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
   const pins = useQuery(api.pins.getAllPins);
   const songs = useQuery(api.songs.getAllSongs);
 
-  // Match pins with their corresponding songs
-  const pinsWithSongs = useMemo<PinWithSong[]>(() => {
-    if (!pins || !songs) return [];
+  const imageUrls = useQuery(api.songs.getAllImageUrls);
 
-    return pins.map((pin) => {
+  // Match pins with their corresponding songs and add image URLs
+  const pinsWithSongs = useMemo(() => {
+    if (!pins || !songs || !imageUrls) return [];
+
+    return pins.map((pin): PinWithSong => {
       const song = songs.find((s) => s._id === pin.songId);
+      if (!song) {
+        return {
+          ...pin,
+          song: null,
+        };
+      }
+
+      const imageUrl = imageUrls[song._id];
+
       return {
         ...pin,
-        song: song || null,
+        song: {
+          ...song,
+          imageUrl: imageUrl ?? undefined,
+        },
       };
     });
-  }, [pins, songs]);
+  }, [pins, songs, imageUrls]);
 
   useEffect(() => {
     (async () => {
@@ -144,13 +165,43 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
               latitude: pin.latitude,
               longitude: pin.longitude,
             }}
-            title={pin.song?.title || "Unknown Song"}
-            description={
-              pin.song ? `${pin.song.artist} - ${pin.song.album}` : pin.comment
-            }
-          />
+            anchor={{ x: 0.5, y: 0.5 }}
+            title={pin.song?.title}
+            description={`${pin.song?.artist} - ${pin.song?.album}`}
+          >
+            {pin.song?.imageUrl ? (
+              <RNImage
+                source={{ uri: pin.song.imageUrl }}
+                style={styles.markerImage}
+                resizeMode="cover"
+              />
+            ) : null}
+          </Marker>
         ))}
       </MapView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  markerImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  calloutContainer: {
+    flex: 0,
+    padding: 12,
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  calloutTitle: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  calloutSubtitle: {
+    color: "#000",
+    fontSize: 14,
+  },
+});
