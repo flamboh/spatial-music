@@ -1,9 +1,32 @@
+import { useQuery } from "convex/react";
 import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
+import { api } from "../convex/_generated/api";
+import type { Id } from "../convex/_generated/dataModel";
 import "../global.css";
 
+// Type for pin with associated song data
+type PinWithSong = {
+  _id: Id<"pins">;
+  latitude: number;
+  longitude: number;
+  comment: string;
+  songId: Id<"songs">;
+  song: {
+    _id: Id<"songs">;
+    title: string;
+    storageId: Id<"_storage">;
+    artist: string;
+    album: string;
+  } | null;
+};
+
+export default function LocationMap() {
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null
+  );
 type LocationMapProps = {
   onLocationChange?: (location: { latitude: number; longitude: number }) => void;
 };
@@ -13,6 +36,23 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
+
+  // Query pins and songs from Convex
+  const pins = useQuery(api.pins.getAllPins);
+  const songs = useQuery(api.songs.getAllSongs);
+
+  // Match pins with their corresponding songs
+  const pinsWithSongs = useMemo<PinWithSong[]>(() => {
+    if (!pins || !songs) return [];
+
+    return pins.map((pin) => {
+      const song = songs.find((s) => s._id === pin.songId);
+      return {
+        ...pin,
+        song: song || null,
+      };
+    });
+  }, [pins, songs]);
 
   useEffect(() => {
     (async () => {
@@ -91,7 +131,19 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
         }}
         showsUserLocation={true}
         showsMyLocationButton={true}
-      />
+      >
+        {pinsWithSongs.map((pin) => (
+          <Marker
+            key={pin._id}
+            coordinate={{
+              latitude: pin.latitude,
+              longitude: pin.longitude,
+            }}
+            title={pin.song?.title || "Unknown Song"}
+            description={pin.song ? `${pin.song.artist} - ${pin.song.album}` : pin.comment}
+          />
+        ))}
+      </MapView>
     </View>
   );
 }
