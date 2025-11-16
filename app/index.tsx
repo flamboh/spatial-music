@@ -145,7 +145,7 @@ export default function Index() {
         )}
         <View className="relative w-full items-center justify-center">
           <Pressable
-            className="absolute left-0 rounded-full bg-black px-3 py-2"
+            className="absolute left-0 rounded-full bg-black p-4"
             onPress={async () => {
               if (!audioUrl) return;
               try {
