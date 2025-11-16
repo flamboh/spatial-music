@@ -54,8 +54,8 @@ export function useCrossfadeAudio({
             1,
             Math.max(0, (elapsed - preRollMs) / durationMs)
           );
-          const incomingVolume = 1 * t;
           const outgoingVolume = 1 - t;
+          const incomingVolume = t;
           nextPlayer.volume = incomingVolume;
           currentPlayer.volume = outgoingVolume;
           if (t >= 1) {

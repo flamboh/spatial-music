@@ -8,6 +8,7 @@ export default defineSchema({
     imageStorageId: v.id("_storage"),
     artist: v.string(),
     album: v.string(),
+    bpm: v.number(),
   }).index("by_title", ["title"]),
   pins: defineTable({
     latitude: v.number(),

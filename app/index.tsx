@@ -86,7 +86,11 @@ export default function Index() {
 
   return (
     <View className="flex-1 bg-background">
-      <LocationMap onLocationChange={setLocation} />
+      <LocationMap
+        onLocationChange={setLocation}
+        activePinId={nearestPin?._id ?? null}
+        isPlaying={!isPaused && !!audioUrl}
+      />
       {/* Centered form overlay */}
       <View
         pointerEvents="box-none"
