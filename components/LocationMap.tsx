@@ -232,7 +232,7 @@ export default function LocationMap({
               }}
               anchor={{ x: 0.5, y: 0.5 }}
               title={pin.song?.title}
-              description={`${pin.song?.artist} - ${pin.song?.album}`}
+              description={`${pin.song?.artist} - ${pin.comment ?? ""}`}
               style={{ overflow: "visible" }}
             >
               {isActive ? (
