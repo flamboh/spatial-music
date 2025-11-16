@@ -21,3 +21,20 @@ export const getAudioUrl = query({
     return await ctx.storage.getUrl(args.id);
   },
 });
+
+export const getAllImageUrls = query({
+  args: {},
+  handler: async (ctx) => {
+    const songs = await ctx.db.query("songs").collect();
+    return await Promise.all(
+      songs.map((song) => ctx.storage.getUrl(song.imageStorageId))
+    );
+  },
+});
+
+export const getImageUrl = query({
+  args: { id: v.id("_storage") },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.id);
+  },
+});
