@@ -1,9 +1,13 @@
 import { useQuery } from "convex/react";
-import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import MapView, { Callout, Marker } from "react-native-maps";
+import {
+  ActivityIndicator,
+  Image as RNImage,
+  StyleSheet,
+  View,
+} from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import "../global.css";
@@ -161,35 +165,43 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
               latitude: pin.latitude,
               longitude: pin.longitude,
             }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            title={pin.song?.title}
+            description={`${pin.song?.artist} - ${pin.song?.album}`}
           >
-            <Callout>
-              <View className="w-64 p-3">
-                {pin.song?.imageUrl && (
-                  <Image
-                    source={{ uri: pin.song.imageUrl }}
-                    style={{ width: "100%", height: 200, borderRadius: 8 }}
-                    contentFit="cover"
-                    className="mb-2"
-                  />
-                )}
-                <Text className="text-lg font-semibold text-foreground">
-                  {pin.song?.title || "Unknown Song"}
-                </Text>
-                {pin.song && (
-                  <Text className="text-sm text-muted-foreground">
-                    {pin.song.artist} - {pin.song.album}
-                  </Text>
-                )}
-                {!pin.song && (
-                  <Text className="text-sm text-muted-foreground">
-                    {pin.comment}
-                  </Text>
-                )}
-              </View>
-            </Callout>
+            {pin.song?.imageUrl ? (
+              <RNImage
+                source={{ uri: pin.song.imageUrl }}
+                style={styles.markerImage}
+                resizeMode="cover"
+              />
+            ) : null}
           </Marker>
         ))}
       </MapView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  markerImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  calloutContainer: {
+    flex: 0,
+    padding: 12,
+    flexDirection: "column",
+    alignItems: "flex-start",
+  },
+  calloutTitle: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  calloutSubtitle: {
+    color: "#000",
+    fontSize: 14,
+  },
+});
