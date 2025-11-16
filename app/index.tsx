@@ -1,8 +1,11 @@
+import { Id } from "@/convex/_generated/dataModel";
+import { useMutation } from "convex/react";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
 import LocationMap from "../components/LocationMap";
 import SongPicker from "../components/song-picker";
 import { Text } from "../components/ui/text";
+import { api } from "../convex/_generated/api";
 import "../global.css";
 
 export default function Index() {
@@ -12,6 +15,22 @@ export default function Index() {
     latitude: number;
     longitude: number;
   } | null>(null);
+  const createPin = useMutation(api.pins.createPin);
+
+  const handleSongSelected = async (songId: string) => {
+    setSelectedSongId(songId);
+    if (!location) return;
+    try {
+      await createPin({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        comment: "Pinned from song picker",
+        songId: songId as Id<"songs">,
+      });
+    } catch (error) {
+      console.error("Failed to create pin", error);
+    }
+  };
   return (
     <View className="flex-1 bg-background">
       <LocationMap onLocationChange={setLocation} />
@@ -35,7 +54,7 @@ export default function Index() {
         )}
         {showPicker && (
           <View className="my-2 w-min max-h-[24rem] rounded-2xl border border-border bg-background/95 shadow-lg">
-            <SongPicker onSongSelected={setSelectedSongId} />
+            <SongPicker onSongSelected={handleSongSelected} />
           </View>
         )}
         <Pressable
