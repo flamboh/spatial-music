@@ -80,9 +80,12 @@ export default function Index() {
   useEffect(() => {
     if (audioUrl && audioUrl !== lastUrlRef.current) {
       lastUrlRef.current = audioUrl;
-      crossfadeTo(audioUrl);
+      crossfadeTo(audioUrl, {
+        currentBpm: nearestSong?.bpm,
+        nextBpm: nearestSong?.bpm,
+      });
     }
-  }, [audioUrl, crossfadeTo]);
+  }, [audioUrl, crossfadeTo, nearestSong?.bpm]);
 
   return (
     <View className="flex-1 bg-background">
