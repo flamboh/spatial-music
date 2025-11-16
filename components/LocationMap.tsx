@@ -87,7 +87,7 @@ export default function LocationMap({
     });
   }, [pins, songs, imageUrls]);
 
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useMemo(() => new Animated.Value(1), [activePinId]);
 
   const activeBpm = useMemo(() => {
     const activePin = pinsWithSongs.find((p) => p._id === activePinId);
@@ -123,7 +123,7 @@ export default function LocationMap({
       pulse.stop();
       pulseAnim.setValue(1);
     };
-  }, [activePinId, activeBpm, pulseAnim]);
+  }, [activePinId, activeBpm, pulseAnim, isPlaying]);
 
   useEffect(() => {
     (async () => {
