@@ -11,7 +11,7 @@ const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
 export default function RootLayout() {
   return (
     <ConvexProvider client={convex}>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }} />
       <PortalHost />
     </ConvexProvider>

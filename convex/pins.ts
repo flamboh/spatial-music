@@ -10,7 +10,6 @@ export const getAllPins = query({
 
 export const createPin = mutation({
   args: {
-    id: v.string(),
     latitude: v.number(),
     longitude: v.number(),
     comment: v.string(),
