@@ -22,13 +22,19 @@ export const getAudioUrl = query({
   },
 });
 
-export const getImageUrls = query({
-  args: { ids: v.array(v.id("_storage")) },
+export const getAllImageUrls = query({
+  args: {},
+  handler: async (ctx) => {
+    const songs = await ctx.db.query("songs").collect();
+    return await Promise.all(
+      songs.map((song) => ctx.storage.getUrl(song.imageStorageId))
+    );
+  },
+});
+
+export const getImageUrl = query({
+  args: { id: v.id("_storage") },
   handler: async (ctx, args) => {
-    const urls: Record<string, string> = {};
-    for (const id of args.ids) {
-      urls[id] = await ctx.storage.getUrl(id);
-    }
-    return urls;
+    return await ctx.storage.getUrl(args.id);
   },
 });

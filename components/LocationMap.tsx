@@ -95,7 +95,9 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
           return;
         }
 
-        const currentLocation = await Location.getCurrentPositionAsync({});
+        const currentLocation = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.BestForNavigation,
+        });
         setLocation(currentLocation);
         onLocationChange?.({
           latitude: currentLocation.coords.latitude,
@@ -105,9 +107,10 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
 
         subscriptionRef.current = await Location.watchPositionAsync(
           {
-            accuracy: Location.Accuracy.Balanced,
+            accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 1000,
             distanceInterval: 1,
+            mayShowUserSettingsDialog: true,
           },
           (newLocation) => {
             setLocation(newLocation);
