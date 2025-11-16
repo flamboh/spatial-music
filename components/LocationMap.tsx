@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Image as RNImage,
+  Animated,
+  Easing,
   StyleSheet,
   View,
 } from "react-native";
@@ -28,6 +30,7 @@ type PinWithSong = {
     artist: string;
     album: string;
     imageUrl?: string;
+    bpm?: number;
   } | null;
 };
 
@@ -36,9 +39,15 @@ type LocationMapProps = {
     latitude: number;
     longitude: number;
   }) => void;
+  activePinId?: Id<"pins"> | null;
+  isPlaying?: boolean;
 };
 
-export default function LocationMap({ onLocationChange }: LocationMapProps) {
+export default function LocationMap({
+  onLocationChange,
+  activePinId,
+  isPlaying = false,
+}: LocationMapProps) {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
@@ -72,10 +81,49 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
         song: {
           ...song,
           imageUrl: imageUrl ?? undefined,
+          bpm: song.bpm,
         },
       };
     });
   }, [pins, songs, imageUrls]);
+
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  const activeBpm = useMemo(() => {
+    const activePin = pinsWithSongs.find((p) => p._id === activePinId);
+    return activePin?.song?.bpm ?? null;
+  }, [activePinId, pinsWithSongs]);
+
+  useEffect(() => {
+    if (!activePinId || !isPlaying) {
+      pulseAnim.setValue(1);
+      return;
+    }
+    const beatMs = activeBpm ? 60000 / activeBpm : 1200;
+    const outDuration = Math.max(150, Math.round(beatMs * 0.6));
+    const inDuration = Math.max(150, Math.round(beatMs * 0.4));
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.2,
+          duration: outDuration,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: inDuration,
+          easing: Easing.in(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    pulse.start();
+    return () => {
+      pulse.stop();
+      pulseAnim.setValue(1);
+    };
+  }, [activePinId, activeBpm, pulseAnim]);
 
   useEffect(() => {
     (async () => {
@@ -159,26 +207,52 @@ export default function LocationMap({ onLocationChange }: LocationMapProps) {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        {pinsWithSongs.map((pin) => (
-          <Marker
-            key={pin._id}
-            coordinate={{
-              latitude: pin.latitude,
-              longitude: pin.longitude,
-            }}
-            anchor={{ x: 0.5, y: 0.5 }}
-            title={pin.song?.title}
-            description={`${pin.song?.artist} - ${pin.song?.album}`}
-          >
-            {pin.song?.imageUrl ? (
-              <RNImage
-                source={{ uri: pin.song.imageUrl }}
-                style={styles.markerImage}
-                resizeMode="cover"
-              />
-            ) : null}
-          </Marker>
-        ))}
+        {pinsWithSongs.map((pin) => {
+          const isActive = pin._id === activePinId;
+          const MarkerContent = (
+            <>
+              <View style={styles.markerWrapper}>
+                {pin.song?.imageUrl ? (
+                  <RNImage
+                    source={{ uri: pin.song.imageUrl }}
+                    style={styles.markerImage}
+                    resizeMode="cover"
+                  />
+                ) : null}
+              </View>
+            </>
+          );
+
+          return (
+            <Marker
+              key={pin._id}
+              coordinate={{
+                latitude: pin.latitude,
+                longitude: pin.longitude,
+              }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              title={pin.song?.title}
+              description={`${pin.song?.artist} - ${pin.song?.album}`}
+              style={{ overflow: "visible" }}
+            >
+              {isActive ? (
+                <Animated.View
+                  style={{
+                    transform: [{ scale: pulseAnim }],
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "visible",
+                    zIndex: 2,
+                  }}
+                >
+                  {MarkerContent}
+                </Animated.View>
+              ) : (
+                MarkerContent
+              )}
+            </Marker>
+          );
+        })}
       </MapView>
     </View>
   );
@@ -189,6 +263,14 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
+  },
+  markerWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: "visible",
+    alignItems: "center",
+    justifyContent: "center",
   },
   calloutContainer: {
     flex: 0,
