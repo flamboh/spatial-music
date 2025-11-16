@@ -7,8 +7,8 @@ import LocationMap from "../components/LocationMap";
 import SongPicker from "../components/song-picker";
 import { Text } from "../components/ui/text";
 import { api } from "../convex/_generated/api";
-import { useCrossfadeAudio } from "../hooks/useCrossfadeAudio";
 import "../global.css";
+import { useCrossfadeAudio } from "../hooks/useCrossfadeAudio";
 
 export default function Index() {
   const [showPicker, setShowPicker] = useState(false);
@@ -80,12 +80,9 @@ export default function Index() {
   useEffect(() => {
     if (audioUrl && audioUrl !== lastUrlRef.current) {
       lastUrlRef.current = audioUrl;
-      crossfadeTo(audioUrl, {
-        currentBpm: nearestSong?.bpm,
-        nextBpm: nearestSong?.bpm,
-      });
+      crossfadeTo(audioUrl);
     }
-  }, [audioUrl, crossfadeTo, nearestSong?.bpm]);
+  }, [audioUrl, crossfadeTo]);
 
   return (
     <View className="flex-1 bg-background">
