@@ -1,13 +1,13 @@
 import { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { setIsAudioActiveAsync, useAudioPlayer } from "expo-audio";
 import { Pause, Play } from "lucide-react-native";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import LocationMap from "../components/LocationMap";
 import SongPicker from "../components/song-picker";
 import { Text } from "../components/ui/text";
 import { api } from "../convex/_generated/api";
+import { useCrossfadeAudio } from "../hooks/useCrossfadeAudio";
 import "../global.css";
 
 export default function Index() {
@@ -22,9 +22,10 @@ export default function Index() {
     latitude: number;
     longitude: number;
   } | null>(null);
-  const [isPaused, setIsPaused] = useState(false);
   const pins = useQuery(api.pins.getAllPins);
   const createPin = useMutation(api.pins.createPin);
+  const { crossfadeTo, togglePause, isPaused } = useCrossfadeAudio();
+  const lastUrlRef = useRef<string | null>(null);
 
   const handleSongSelected = (song: {
     id: string;
@@ -75,14 +76,13 @@ export default function Index() {
       ? { id: nearestSong.audioStorageId as Id<"_storage"> }
       : "skip"
   );
-  const player = useAudioPlayer(audioUrl ?? undefined);
 
   useEffect(() => {
-    if (audioUrl) {
-      player.play();
-      setIsPaused(false);
+    if (audioUrl && audioUrl !== lastUrlRef.current) {
+      lastUrlRef.current = audioUrl;
+      crossfadeTo(audioUrl);
     }
-  }, [audioUrl, player]);
+  }, [audioUrl, crossfadeTo]);
 
   return (
     <View className="flex-1 bg-background">
@@ -148,19 +148,7 @@ export default function Index() {
             className="absolute left-0 rounded-full bg-black p-4"
             onPress={async () => {
               if (!audioUrl) return;
-              try {
-                if (isPaused) {
-                  await setIsAudioActiveAsync(true);
-                  player.play();
-                  setIsPaused(false);
-                } else {
-                  player.pause();
-                  await setIsAudioActiveAsync(false);
-                  setIsPaused(true);
-                }
-              } catch (error) {
-                console.warn("Audio toggle failed", error);
-              }
+              togglePause();
             }}
             disabled={!audioUrl}
           >
