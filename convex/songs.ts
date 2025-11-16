@@ -26,9 +26,14 @@ export const getAllImageUrls = query({
   args: {},
   handler: async (ctx) => {
     const songs = await ctx.db.query("songs").collect();
-    return await Promise.all(
+    const urls = await Promise.all(
       songs.map((song) => ctx.storage.getUrl(song.imageStorageId))
     );
+    const result: Record<string, string | null> = {};
+    songs.forEach((song, i) => {
+      result[song._id as string] = urls[i];
+    });
+    return result;
   },
 });
 
