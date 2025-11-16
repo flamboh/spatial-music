@@ -1,31 +1,30 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `app/`: Active Expo Router screens and layouts; `index.tsx` is the landing view wired to Convex queries and Expo Audio.
-- `convex/`: Convex schema (`schema.ts`) and serverless functions (`pins.ts`, `songs.ts`); keep data contracts in sync with frontend types.
-- `assets/images/`: App icons and splash artwork.
-- `app-example/`: Reference starter app and components for patterns; do not import from here in production builds.
-- Root configs: `eslint.config.js`, `tsconfig.json`, and `package.json` scripts; sample data in `samplePins.jsonl` and `sampleSongs.jsonl`.
+- `app/`: Expo Router screens/layouts; `index.tsx` is the Convex-powered landing view. Co-locate route-specific components here.
+- `components/`: Reusable React Native UI pieces; prefer creating shared variants here when using NativeWind styling or React Native Reusables primitives.
+- `lib/`: Cross-cutting helpers (`utils.ts` for `cn` merging, `theme.ts` for design tokens).
+- `convex/`: Convex schema (`schema.ts`) and functions (`pins.ts`, `songs.ts`); keep args/types aligned with frontend usage.
+- Styling config: `global.css` (theme tokens), `tailwind.config.js`, `nativewind-env.d.ts`, `babel.config.js`, and `metro.config.js` are required for NativeWind.
+- Assets & data: `assets/images/` for icons/splash art; sample JSONL files for pins/songs at the repo root.
 
 ## Build, Test, and Development Commands
-- Install: `npm install` (required once or after dependency changes).
-- Run app: `npm start` (alias for `expo start`) then choose platform (iOS simulator, Android emulator, or web).
-- Platform shortcuts: `npm run ios`, `npm run android`, `npm run web` for direct launches.
-- Lint: `npm run lint` (Expo + ESLint rules).
-- Reset starter: `npm run reset-project` to swap in the `app-example` baseline (destroys current `app/` content—use with caution).
+- Install: `npm install`.
+- Run app: `npm start` (Expo Dev Server) then pick iOS, Android, or web; shortcuts: `npm run ios`, `npm run android`, `npm run web`.
+- Lint: `npm run lint` (Expo + ESLint config).
+- Reset starter: `npm run reset-project` to restore the example scaffold (overwrites `app/`).
 
-## Coding Style & Naming Conventions
-- Language: TypeScript with strict mode (`tsconfig.json`); prefer explicit types on public APIs and Convex arguments.
-- Components: Functional React components with hooks; keep screen files co-located in `app/` by route.
-- Formatting: 2-space indentation; run `npm run lint` before pushing. Follow Expo Router file-based naming (e.g., `app/(tabs)/map.tsx`, `[id].tsx` for dynamic routes).
-- Convex: Define args with `v.*` validators and keep schema updates in `convex/schema.ts` before using new fields.
+## Styling, UI Kits & Naming
+- Use NativeWind `className` on React Native components; tokens come from `global.css` and `tailwind.config.js` (content paths include `app/**/*` and `components/**/*`).
+- Compose classes with `cn` from `lib/utils` when conditional styling is needed; rely on `tailwind-merge` to dedupe.
+- Build shared UI with React Native Reusables primitives (e.g., portals via `@rn-primitives/portal`) inside `components/`, exporting from `components/ui` patterns when they emerge.
+- Prefer 2-space indentation, PascalCase components, camelCase functions/vars, and keep route filenames aligned with Expo Router conventions (e.g., `app/(tabs)/map.tsx`, dynamic `[id].tsx`).
 
 ## Testing Guidelines
-- No automated test suite is configured; rely on `npm start` for manual verification across platforms.
-- When adding tests, align names with the file under test (e.g., `app/foo.test.tsx`); prefer lightweight React Native testing libraries and mock Convex/network calls.
-- Manually sanity-check critical flows: Convex queries resolving with `EXPO_PUBLIC_CONVEX_URL` set, audio playback via `useAudioPlayer`, and navigation between routes.
+- No automated suite yet; run flows manually via `npm start` across platforms.
+- When adding tests, mirror file names (`*.test.tsx`) and mock Convex/audio calls. Validate fetching pins/songs with `EXPO_PUBLIC_CONVEX_URL` set, and audio playback with `useAudioPlayer`.
 
 ## Commit & Pull Request Guidelines
-- Commits: Use present-tense, imperative messages summarizing the change (e.g., “Add pin creation mutation”). Keep related changes together.
-- Pull requests: Provide a concise summary, linked issue (if any), platform(s) tested, and screenshots/screen recordings for UI changes. Note any data or env requirements (Convex deployment URL, seed files).
-- Avoid committing sensitive values; use `.env` with `EXPO_PUBLIC_CONVEX_URL` for frontend access to Convex.
+- Commits: Imperative, present-tense summaries (e.g., “Add NativeWind song picker styles”); keep related changes together.
+- PRs: Include a clear summary, linked issues, platforms tested, and screenshots/screen recordings for UI tweaks. Call out NativeWind or reusable component additions and any schema/env changes.
+- Do not commit secrets; configure Convex URL via `.env` and reference with `EXPO_PUBLIC_CONVEX_URL`.

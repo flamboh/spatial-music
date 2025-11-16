@@ -1,49 +1,32 @@
-import { useQuery } from "convex/react";
-import { useAudioPlayer } from "expo-audio";
-import { Button, Text, View } from "react-native";
-import { api } from "../convex/_generated/api";
+import { Pressable, View } from "react-native";
+import SongPicker from "../components/song-picker";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../components/ui/popover";
+import { Text } from "../components/ui/text";
 import "../global.css";
 
 export default function Index() {
-  const pins = useQuery(api.pins.getAllPins);
-  // Convex function that uses the id from the first pin, but only runs if the id is present
-  const song = useQuery(
-    api.songs.getSong,
-    pins && pins[0] && pins[0].songId ? { id: pins[0].songId } : "skip"
-  );
-  const audioUrl = useQuery(
-    api.songs.getAudioUrl,
-    song && song.storageId ? { id: song.storageId } : "skip"
-  );
-  const player = useAudioPlayer(audioUrl);
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text className="text-red-500 text-2xl font-bold">
-        Edit app/index.tsx to edit this screen.
-      </Text>
-      {pins?.map((pin) => (
-        <Text key={pin._id}>
-          {pin.comment} {pin.songId} {pin.latitude} {pin.longitude}
-        </Text>
-      ))}
-      {song && <Text>{song.title}</Text>}
-      {audioUrl && <Text>{audioUrl}</Text>}
-      <View>
-        <Button title="Play Sound" onPress={() => player.play()} />
-        <Button
-          title="Replay Sound"
-          onPress={() => {
-            player.seekTo(0);
-            player.play();
-          }}
-        />
-      </View>
+    <View className="flex-1 items-center justify-end bg-background px-4 pb-10">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Pressable className="rounded-full bg-primary px-4 py-2">
+            <Text className="text-center text-base font-semibold text-primary-foreground">
+              Open Song Picker
+            </Text>
+          </Pressable>
+        </PopoverTrigger>
+        <PopoverContent
+          side="top"
+          sideOffset={12}
+          className="w-80 max-h-[20rem] p-0"
+        >
+          <SongPicker />
+        </PopoverContent>
+      </Popover>
     </View>
   );
 }
