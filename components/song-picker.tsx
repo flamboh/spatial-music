@@ -1,19 +1,29 @@
 import { useQuery } from "convex/react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { api } from "../convex/_generated/api";
 import { Card } from "./ui/card";
 
-export default function SongPicker() {
+type SongPickerProps = {
+  onSongSelected?: (id: string) => void;
+};
+
+export default function SongPicker({ onSongSelected }: SongPickerProps) {
   const songs = useQuery(api.songs.getAllSongs);
   return (
-    <View className="gap-2 p-2 bg-transparent">
-      {!songs && <Text className="text-muted-foreground">Loading songs…</Text>}
+    <View className="gap-2 bg-transparent p-2">
+      {!songs && (
+        <Text className="h-[160px] w-72 text-muted-foreground">
+          Loading songs…
+        </Text>
+      )}
       {songs?.length === 0 && (
-        <Text className="text-muted-foreground">No songs available.</Text>
+        <Text className="h-[160px] w-64 text-muted-foreground">
+          No songs available.
+        </Text>
       )}
       {songs && (
         <ScrollView
-          style={{ height: 120, maxHeight: 180 }}
+          style={{ height: 100, maxHeight: 160, width: 288 }}
           contentContainerStyle={{ gap: 2, paddingBottom: 8 }}
           showsVerticalScrollIndicator
           scrollEnabled
@@ -26,11 +36,17 @@ export default function SongPicker() {
           {songs.map((song) => (
             <Pressable
               key={song._id}
-              onPress={() => {
-                Alert.alert("Song selected", `${song.title} by ${song.artist}`);
-              }}
+              onPress={() => onSongSelected?.(song._id)}
+              style={({ pressed }) => [
+                {
+                  opacity: pressed ? 0.7 : 1,
+                  transform: [{ scale: pressed ? 0.96 : 1 }],
+                  backgroundColor: pressed ? "rgba(0,0,0,0.08)" : "transparent",
+                },
+              ]}
+              className="rounded-xl"
             >
-              <Card className="gap-0.5 m-0 p-2 bg-transparent">
+              <Card className="m-0 gap-0.5 bg-transparent p-2">
                 <Text className="text-lg font-semibold text-foreground">
                   {song.title}
                 </Text>
