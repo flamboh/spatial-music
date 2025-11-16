@@ -17,7 +17,8 @@ type PinWithSong = {
   song: {
     _id: Id<"songs">;
     title: string;
-    storageId: Id<"_storage">;
+    audioStorageId: Id<"_storage">;
+    imageStorageId: Id<"_storage">;
     artist: string;
     album: string;
   } | null;
